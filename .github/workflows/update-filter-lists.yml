@@ -17,9 +17,9 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -30,7 +30,7 @@ jobs:
         run: |
           curl --fail --location --retry 3 \
             --output "$RUNNER_TEMP/SafariConverterLib.tar.gz" \
-            https://github.com/AdguardTeam/SafariConverterLib/archive/refs/tags/4.3.0.tar.gz
+            https://github.com/AdguardTeam/SafariConverterLib/archive/refs/tags/v4.3.0.tar.gz
           tar -xzf "$RUNNER_TEMP/SafariConverterLib.tar.gz" -C "$RUNNER_TEMP"
           swift build \
             --package-path "$RUNNER_TEMP/SafariConverterLib-4.3.0" \
@@ -49,7 +49,7 @@ jobs:
       - run: npm run check
 
       - name: Deploy Worker and generated assets
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
