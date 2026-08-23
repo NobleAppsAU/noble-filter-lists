@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+.dev.vars
+assets/v1/manifest.json
+assets/v1/apple/*.json
+!assets/v1/apple/.gitkeep
+

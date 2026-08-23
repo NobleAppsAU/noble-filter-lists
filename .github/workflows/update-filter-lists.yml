@@ -1,0 +1,55 @@
+name: Update filter lists
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 1 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-filter-list-update
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the pinned Safari rule converter
+        run: |
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/SafariConverterLib.tar.gz" \
+            https://github.com/AdguardTeam/SafariConverterLib/archive/refs/tags/4.3.0.tar.gz
+          tar -xzf "$RUNNER_TEMP/SafariConverterLib.tar.gz" -C "$RUNNER_TEMP"
+          swift build \
+            --package-path "$RUNNER_TEMP/SafariConverterLib-4.3.0" \
+            --configuration release \
+            --product ConverterTool
+          echo "CONVERTER_TOOL_PATH=$RUNNER_TEMP/SafariConverterLib-4.3.0/.build/release/ConverterTool" >> "$GITHUB_ENV"
+
+      - name: Download, convert and sign the current lists
+        env:
+          FILTER_LIST_SIGNING_PRIVATE_KEY: ${{ secrets.FILTER_LIST_SIGNING_PRIVATE_KEY }}
+        run: scripts/update-lists.sh
+
+      - run: node scripts/verify-manifest.mjs
+
+      - run: npm test
+      - run: npm run check
+
+      - name: Deploy Worker and generated assets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

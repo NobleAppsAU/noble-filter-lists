@@ -1,0 +1,17 @@
+{
+  "name": "noble-filter-lists",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "wrangler deploy --dry-run && tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "types": "wrangler types"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2",
+    "vitest": "3.2.7",
+    "wrangler": "4.125.0"
+  }
+}
