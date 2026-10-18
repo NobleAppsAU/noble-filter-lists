@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+    outputs:
+      deployed-manifest: ${{ steps.publication.outputs.manifest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -45,6 +47,12 @@ jobs:
         run: scripts/update-lists.sh
 
       - run: node scripts/verify-manifest.mjs
+
+      - name: Prepare the publication checkpoint
+        id: publication
+        shell: bash
+        run: |
+          echo "manifest=$(base64 < assets/v1/manifest.json | tr -d '\n')" >> "$GITHUB_OUTPUT"
 
       - run: npm test
       - run: npm run check
@@ -79,13 +87,17 @@ jobs:
         if: steps.cadence.outputs.due == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Download the deployed manifest
+      - name: Restore the deployed manifest
         if: steps.cadence.outputs.due == 'true'
         shell: bash
+        env:
+          MANIFEST_BASE64: ${{ needs.update-and-deploy.outputs.deployed-manifest }}
         run: |
-          curl --fail --location --retry 3 --proto '=https' --tlsv1.2 \
-            --output "$RUNNER_TEMP/manifest.json" \
-            https://filters.matthewnoble.au/v1/manifest.json
+          if [[ -z "$MANIFEST_BASE64" ]]; then
+            echo "The deployment job did not provide a manifest." >&2
+            exit 1
+          fi
+          printf '%s' "$MANIFEST_BASE64" | base64 --decode > "$RUNNER_TEMP/manifest.json"
 
       - name: Verify and write the publication checkpoint
         if: steps.cadence.outputs.due == 'true'
