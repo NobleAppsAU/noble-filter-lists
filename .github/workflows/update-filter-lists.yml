@@ -5,8 +5,7 @@ on:
   schedule:
     - cron: "17 1 * * *"
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: production-filter-list-update
@@ -16,10 +15,12 @@ jobs:
   update-and-deploy:
     runs-on: macos-15
     timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
@@ -49,7 +50,62 @@ jobs:
       - run: npm run check
 
       - name: Deploy Worker and generated assets
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  record-publication:
+    name: Record publication checkpoint
+    needs: update-and-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Determine whether a checkpoint is due
+        id: cadence
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || "$(date -u +%d)" == "01" ]]; then
+            echo "due=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "due=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out the repository
+        if: steps.cadence.outputs.due == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download the deployed manifest
+        if: steps.cadence.outputs.due == 'true'
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 --proto '=https' --tlsv1.2 \
+            --output "$RUNNER_TEMP/manifest.json" \
+            https://filters.matthewnoble.au/v1/manifest.json
+
+      - name: Verify and write the publication checkpoint
+        if: steps.cadence.outputs.due == 'true'
+        run: |
+          node scripts/create-publication-checkpoint.mjs \
+            --manifest "$RUNNER_TEMP/manifest.json" \
+            --output state/latest-publication.json
+
+      - name: Commit the publication checkpoint
+        if: steps.cadence.outputs.due == 'true'
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain -- state/latest-publication.json)" ]]; then
+            echo "The publication checkpoint is already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/latest-publication.json
+          git commit -m "Record filter-list publication checkpoint"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

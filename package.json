@@ -6,12 +6,12 @@
   "scripts": {
     "check": "wrangler deploy --dry-run && tsc --noEmit",
     "deploy": "wrangler deploy",
-    "test": "vitest run",
+    "test": "vitest run && node --test test/*.node.mjs",
     "types": "wrangler types"
   },
   "devDependencies": {
     "typescript": "5.9.2",
-    "vitest": "3.2.7",
-    "wrangler": "4.125.0"
+    "vitest": "4.1.12",
+    "wrangler": "4.151.1"
   }
 }

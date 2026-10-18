@@ -27,7 +27,11 @@ They are never committed.
 The daily GitHub Actions workflow downloads EasyList and EasyPrivacy, builds
 AdGuard's pinned Safari converter, creates the two WebKit JSON rule lists,
 signs their manifest, validates the Worker, and deploys the Worker plus assets.
-It can also be run manually.
+It can also be run manually. After a successful manual deployment, and after
+the first successful scheduled deployment each month, the workflow verifies
+the deployed signed manifest and commits a compact publication checkpoint to
+`state/latest-publication.json`. This provides an auditable record without
+committing the generated rule files.
 
 For a local update:
 
