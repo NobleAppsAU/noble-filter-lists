@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-18T05:57:38.044Z",
-  "manifestSHA256": "883dedec1bca0bb5f648f49e5280e326a04114996a175a46ca4cd486a0060e3e",
+  "publishedAt": "2026-10-18T06:16:25.786Z",
+  "manifestSHA256": "229602cbdd0d5c14cae0cf29ed217ac4cd0897c966b140b12d01d397c6e57a4e",
   "converter": {
     "name": "AdGuard SafariConverterLib",
     "version": "4.3.0",
@@ -11,16 +11,16 @@
     {
       "id": "easylist",
       "sourceURL": "https://easylist.to/easylist/easylist.txt",
-      "sourceVersion": "202610180551",
+      "sourceVersion": "202610180610",
       "url": "https://filters.matthewnoble.au/v1/apple/easylist.json",
-      "sha256": "217b85b416182db75a9f163ebf83a09cf451a6b235584bc044f0ee1355ecbfd7",
-      "byteCount": 8067071,
-      "ruleCount": 65019
+      "sha256": "29723bd328d0ccdc03a7348ab03881d0becd17ccf287e06e39344b160ea92ece",
+      "byteCount": 8068444,
+      "ruleCount": 65032
     },
     {
       "id": "easyprivacy",
       "sourceURL": "https://easylist.to/easylist/easyprivacy.txt",
-      "sourceVersion": "202610180551",
+      "sourceVersion": "202610180610",
       "url": "https://filters.matthewnoble.au/v1/apple/easyprivacy.json",
       "sha256": "675d446d3a849de3a2ec38c9fbd29ac36e77122e052b1b846ff62a36eba43ef6",
       "byteCount": 6148693,
